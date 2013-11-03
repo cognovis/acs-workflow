@@ -71,7 +71,4 @@ set left_navbar_html "
         <hr/>
 "
 
-ad_return_template
-
-
 ad_return_template 

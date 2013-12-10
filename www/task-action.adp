@@ -154,7 +154,6 @@ set reassign_p [im_permission $user_id wf_reassign_tasks]
 	<td colspan="2"><!--<ul class="admin_links"><li><a href="@task.cancel_url@">#acs-workflow.cancel_task#</a></li></ul>--></td>
         </tr>
         </table>
-	-->
     </if>
     <else>
         <table>

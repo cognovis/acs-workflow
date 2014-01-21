@@ -1870,5 +1870,3 @@ ad_proc wf_sweep_message_transition_tcl {} {
     }
 
 }
-
-

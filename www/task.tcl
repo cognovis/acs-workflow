@@ -39,7 +39,11 @@ if { [llength $the_action] > 1 } {
     ad_script_abort
 } elseif { [llength $the_action] == 1 } {
     
+    callback workflow_task_before_update -task_id $task_id -action $the_action -msg $msg -attributes [array get attributes]
+    
     set journal_id [wf_task_action -user_id $user_id -msg $msg -attributes [array get attributes] -assignments [array get assignments] $task_id $the_action]
+
+    callback workflow_task_after_update -task_id $task_id -action $the_action -msg $msg -attributes [array get attributes]
 
     # After a "finish" action we can go back to return_url directly.
     if {"finish" == $the_action} { ad_returnredirect $return_url }

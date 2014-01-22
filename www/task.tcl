@@ -215,7 +215,6 @@ if {$show_action_form_p} {
     } else {
         ad_form -extend -name $form_id -form {
             {action.start:text(submit) {label "[_ acs-workflow.Start_Task]"}}
-            {action.finish:text(submit) {label "[_ acs-workflow.Task_done]"}}
         }
     }
         
@@ -226,6 +225,9 @@ if {$show_action_form_p} {
                 break
             }
             
+            if {$msg ne ""} {
+                set msg "[lang::message::lookup "" acs-workflow.Comment_added "Comment added:"] $msg"
+            }
             if {[llength $the_action] == 1 } {
     
                 callback workflow_task_before_update -task_id $task_id -action $the_action -msg $msg -attributes [array get attributes]

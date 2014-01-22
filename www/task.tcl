@@ -148,7 +148,6 @@ if {$show_action_form_p} {
     #   task_assigned_users:multirow
     #   task_roles_to_assign:multirow
 
-    set form_id "task-action"
     # "Approval Tasks" are identified by atleast one attribute
     # to be set during the transition
     set workflow_key $task(workflow_key)
@@ -169,48 +168,58 @@ if {$show_action_form_p} {
     # Show reassign links (Assign yourself / reassign)? 
     set reassign_p [im_permission $user_id wf_reassign_tasks]
 
-
+    set header_html [im_box_header $task(task_name)]
+    set form_id task-action
 
     ad_form -name $form_id \
         -export [list return_url {task_id $task(task_id)}] \
         -action "/acs-workflow/task" \
         -has_edit 1
 
-    if {0} {
-        ds_comment "[template::multirow columns task_rols_to_assign]"
-        <multiple name="task_roles_to_assign">
+    if {$approval_task_p} {
+
+        if {0} {
+            ds_comment "[template::multirow columns task_rols_to_assign]"
+            <multiple name="task_roles_to_assign">
             <tr>
                 <th align="right">#acs-workflow.lt_Assign_task_roles_to_#</th>
                 <td>@task_roles_to_assign.assignment_widget;noquote@</td>
             </tr>
-        </multiple>
-    }
-
-    template::multirow foreach task_attributes_to_set {
-        if {[info exists attributes($attribute_name)]} {
-            set value $attributes($attribute_name)
+            </multiple>
         }
-        switch $datatype {
-            boolean {
-                ad_form -extend -name $form_id -form {
-                    {attributes.${attribute_name}:text(select) {value $value} {label "$pretty_name"} {options {{"[_ intranet-core.Yes]" "t"} {"[_ intranet-core.No]" "f"}}}}
-                }          
+
+        template::multirow foreach task_attributes_to_set {
+            if {[info exists attributes($attribute_name)]} {
+                set value $attributes($attribute_name)
             }
-            default {
-                ad_form -extend -name $form_id -form {
-                    {attributes.${attribute_name}:text(text) {label "$pretty_name"} {value "$value"}}            
+            switch $datatype {
+                boolean {
+                    ad_form -extend -name $form_id -form {
+                        {attributes.${attribute_name}:text(select) {value $value} {label "$pretty_name"} {options {{"[_ intranet-core.Yes]" "t"} {"[_ intranet-core.No]" "f"}}}}
+                    }          
+                }
+                default {
+                    ad_form -extend -name $form_id -form {
+                        {attributes.${attribute_name}:text(text) {label "$pretty_name"} {value "$value"}}            
+                    }
                 }
             }
         }
+
+
+        ad_form -extend -name $form_id -form {
+            {msg:text(textarea),optional {label "[_ acs-workflow.Comment]"} {html {cols 20 rows 4}}}
+            {action.finish:text(submit) {label "[_ acs-workflow.Task_done]"}}
+
+        } 
+    } else {
+        ad_form -extend -name $form_id -form {
+            {action.start:text(submit) {label "[_ acs-workflow.Start_Task]"}}
+            {action.finish:text(submit) {label "[_ acs-workflow.Task_done]"}}
+        }
     }
-
-    set header_html [im_box_header $task(task_name)]
-
-    ad_form -extend -name $form_id -form {
-        {msg:text(textarea),optional {label "[_ acs-workflow.Comment]"} {html {cols 20 rows 4}}}
-        {action.finish:text(submit) {label "[_ acs-workflow.Task_done]"}}
-
-        } -on_submit {
+        
+    ad_form -extend -name $form_id -on_submit {
             callback workflow_task_on_submit -task_id $task_id -form_id $form_id -workflow_key $task(workflow_key)
             if {[exists_and_not_null error_field]} {
                 form set_error $form_id $error_field $error_message

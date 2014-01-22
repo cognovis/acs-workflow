@@ -246,7 +246,8 @@ ad_proc -public wf_task_info {
                a.pretty_name, 
                a.datatype, 
                acs_object.get_attribute(t.case_id, a.attribute_name) as value,
-               '' as attribute_widget
+               '' as attribute_widget,
+               '' as form_widget
           from acs_attributes a, wf_transition_attribute_map m, wf_tasks t
          where t.task_id = :task_id
            and m.workflow_key = t.workflow_key and m.transition_key = t.transition_key
@@ -259,6 +260,14 @@ ad_proc -public wf_task_info {
                 pretty_name $pretty_name \
                 datatype $datatype \
                 value $value]]
+        switch $datatype {
+            boolean {
+                set form_widget "select"
+            }
+            default {
+                set form_widget "text"
+            }
+        }
     }
 
     db_multirow task_roles_to_assign task_roles_to_assign {

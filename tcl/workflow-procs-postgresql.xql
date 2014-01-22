@@ -75,7 +75,8 @@
                a.pretty_name, 
                a.datatype, 
                acs_object__get_attribute(t.case_id, a.attribute_name) as value,
-               '' as attribute_widget
+               '' as attribute_widget,
+               '' as form_widget
           from acs_attributes a, wf_transition_attribute_map m, wf_tasks t
          where t.task_id = :task_id
            and m.workflow_key = t.workflow_key and m.transition_key = t.transition_key

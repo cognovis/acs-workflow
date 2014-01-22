@@ -44,3 +44,12 @@ ad_proc -public -callback workflow_task_after_update {
 @param msg Message provided as comment by the user
 @param attributes Returns a list of {key value} pairs from the task.
 } -
+
+ad_proc -public -callback workflow_task_on_submit {
+    {-task_id:required}
+    {-form_id:required}
+    {-workflow_key:required}
+} {
+    This callback allows you to execute action before the action is submitted
+
+} -

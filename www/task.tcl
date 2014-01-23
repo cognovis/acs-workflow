@@ -210,42 +210,61 @@ if {$show_action_form_p} {
         ad_form -extend -name $form_id -form {
             {msg:text(textarea),optional {label "[_ acs-workflow.Comment]"} {html {cols 20 rows 4}}}
             {action.finish:text(submit) {label "[_ acs-workflow.Task_done]"}}
-
+            {task_start_date:text(inform) {label "[_ acs-workflow.Task_started]"} {value "[db_string timestamp {select now() from dual}]"}}
         } 
     } else {
         ad_form -extend -name $form_id -form {
             {action.start:text(submit) {label "[_ acs-workflow.Start_Task]"}}
         }
     }
-        
+     
     ad_form -extend -name $form_id -on_submit {
-            callback workflow_task_on_submit -task_id $task_id -form_id $form_id -workflow_key $task(workflow_key)
-            if {[exists_and_not_null error_field]} {
-                form set_error $form_id $error_field $error_message
-                break
-            }
-            
-            if {$msg ne ""} {
-                set msg "[lang::message::lookup "" acs-workflow.Comment_added "Comment added:"] $msg"
-            }
-            if {[llength $the_action] == 1 } {
-    
-                callback workflow_task_before_update -task_id $task_id -action $the_action -msg $msg -attributes [array get attributes]
-    
-                set journal_id [wf_task_action -user_id $user_id -msg $msg -attributes [array get attributes] -assignments [array get assignments] $task_id $the_action]
-
-                callback workflow_task_after_update -task_id $task_id -action $the_action -msg $msg -attributes [array get attributes]
-
-                # After a "finish" action we can go back to return_url directly.
-                if {"finish" == $the_action} { ad_returnredirect $return_url }
-
-                # Otherwise go back to the tasks's page
-                ad_returnredirect "task?[export_url_vars task_id return_url]"
-
-                ad_script_abort
-            }
+        
+        # Quick check if the user was waiting to long to approve
+        set estimated_minutes $task(estimated_minutes)
+        if {$estimated_minutes eq ""} {
+            set estimated_minutes 5
         }
+        
+        if {[db_string date_check "select 1 from dual where :task_start_date < now() - interval '$estimated_minutes minutes'" -default 0]} {
+            form set_error $form_id task_start_date "[_ acs-workflow.Waited_too_long]"
+            template::element::set_value $form_id task_start_date "[db_string timestamp {select now() from dual}]"
+            break
+        }
+
+        set object_modify_date [db_string modify_date "select last_modified from acs_objects where object_id = $task(object_id)"]
+        if {[db_string date_check "select 1 from dual where :object_modify_date >= :task_start_date" -default 0]} {
+            form set_error $form_id task_start_date "[_ acs-workflow.Object_was_changed]"
+            template::element::set_value $form_id task_start_date "[db_string timestamp {select now() from dual}]"
+            break
+        }
+        
+        callback workflow_task_on_submit -task_id $task_id -form_id $form_id -workflow_key $task(workflow_key)
+        if {[exists_and_not_null error_field]} {
+            form set_error $form_id $error_field $error_message
+            break
+        }
+        
+        if {$msg ne ""} {
+            set msg "[lang::message::lookup "" acs-workflow.Comment_added "Comment added:"] $msg"
+        }
+
+        if {[llength $the_action] == 1 } {
+    
+            callback workflow_task_before_update -task_id $task_id -action $the_action -msg $msg -attributes [array get attributes]
+            set journal_id [wf_task_action -user_id $user_id -msg $msg -attributes [array get attributes] -assignments [array get assignments] $task_id $the_action]
+            callback workflow_task_after_update -task_id $task_id -action $the_action -msg $msg -attributes [array get attributes]
+
+            # After a "finish" action we can go back to return_url directly.
+            if {"finish" == $the_action} { ad_returnredirect $return_url }
+
+            # Otherwise go back to the tasks's page
+            ad_returnredirect "task?[export_url_vars task_id return_url]"
+            ad_script_abort
+        }
+    }
 }
+
 set panel_width [expr {100/(${panels:rowcount})}]
 set case_id $task(case_id)
 set case_state [db_string case_state "select state from wf_cases where case_id = :case_id"]
@@ -273,3 +292,4 @@ wf_sweep_message_transition_tcl
 set export_form_vars [export_vars -form {task_id return_url}]
 
 ad_return_template
+

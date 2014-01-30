@@ -210,14 +210,17 @@ if {$show_action_form_p} {
         ad_form -extend -name $form_id -form {
             {msg:text(textarea),optional {label "[_ acs-workflow.Comment]"} {html {cols 20 rows 4}}}
             {action.finish:text(submit) {label "[_ acs-workflow.Task_done]"}}
-            {task_start_date:text(inform) {label "[_ acs-workflow.Task_started]"} {value "[db_string timestamp {select now() from dual}]"}}
         } 
     } else {
         ad_form -extend -name $form_id -form {
             {action.start:text(submit) {label "[_ acs-workflow.Start_Task]"}}
         }
     }
-     
+    
+    ad_form -extend -name $form_id -form {
+        {task_start_date:text(inform) {label "[_ acs-workflow.Task_started]"} {value "[db_string timestamp {select now() from dual}]"}}
+    }
+    
     ad_form -extend -name $form_id -on_submit {
         
         # Quick check if the user was waiting to long to approve
@@ -245,6 +248,7 @@ if {$show_action_form_p} {
             break
         }
         
+    } -after_submit {
         if {$msg ne ""} {
             set msg "[lang::message::lookup "" acs-workflow.Comment_added "Comment added:"] $msg"
         }

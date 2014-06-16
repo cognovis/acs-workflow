@@ -6,6 +6,7 @@
 
 set user_id [ad_conn user_id]
 set form_id "task-action"
+
 # "Approval Tasks" are identified by atleast one attribute
 # to be set during the transition
 set workflow_key $task(workflow_key)
@@ -33,16 +34,6 @@ ad_form -name $form_id \
     -action "/acs-workflow/task" \
     -has_edit 1
 
-if {0} {
-    ds_comment "[template::multirow columns task_rols_to_assign]"
-    <multiple name="task_roles_to_assign">
-        <tr>
-            <th align="right">#acs-workflow.lt_Assign_task_roles_to_#</th>
-            <td>@task_roles_to_assign.assignment_widget;noquote@</td>
-        </tr>
-    </multiple>
-}
-
 template::multirow foreach task_attributes_to_set {
     set attributes.${attribute_name} $value
     switch $datatype {
@@ -61,7 +52,6 @@ template::multirow foreach task_attributes_to_set {
 
 set header_html [im_box_header $task(task_name)]
 
-ds_comment "[array get task]"
 ad_form -extend -name $form_id -form {
     {msg:text(textarea),optional {label "[_ acs-workflow.Comment]"} {html {cols 20 rows 4}}}
     {action.finish:text(submit) {label "[_ acs-workflow.Task_done]"}}

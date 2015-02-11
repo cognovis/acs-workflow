@@ -3,29 +3,38 @@ create function my_random()
 returns integer '
 begin
     return random();
-end;' language 'plpgsql';
+END;
+$$ LANGUAGE plpgsql;
 
 
 
 -- show errors
 
-create function push_task_ahead(integer,varchar,integer,varchar,varchar)
-returns integer as '
-declare
-    push_task_ahead__task_id             alias for $1;
-    push_task_ahead__state               alias for $2;
-    push_task_ahead__user_id             alias for $3;
-    push_task_ahead__workflow_key        alias for $4;
-    push_task_ahead__transition_key      alias for $5;
+
+
+-- added
+select define_function_args('push_task_ahead','task_id,state,user_id,workflow_key,transition_key');
+
+--
+-- procedure push_task_ahead/5
+--
+CREATE OR REPLACE FUNCTION push_task_ahead(
+   push_task_ahead__task_id integer,
+   push_task_ahead__state varchar,
+   push_task_ahead__user_id integer,
+   push_task_ahead__workflow_key varchar,
+   push_task_ahead__transition_key varchar
+) RETURNS integer AS $$
+DECLARE
     v_journal_id                         integer;
     v_value                              char(1);
     attr_rec                             record;
-begin
-    if state = ''enabled'' then
+BEGIN
+    if state = 'enabled' then
         v_journal_id := workflow_case__task_action (
 	    push_task_ahead__task_id,
-	    ''start'',
-	    ''1.1.1.1'',
+	    'start',
+	    '1.1.1.1',
 	    push_task_ahead__user_id,
 	    null
 	    );
@@ -34,16 +43,16 @@ begin
         if my_random() < 0.02 then
 	    v_journal_id := workflow_case__task_action (
 		push_task_ahead__task_id,
-		''cancel'',
-		''1.1.1.1'',
+		'cancel',
+		'1.1.1.1',
 		push_task_ahead__user_id,
 		null
 		);
         else
 	    v_journal_id := workflow_case__begin_task_action (
 		push_task_ahead__task_id,
-		''finish'',
-		''1.1.1.1'',
+		'finish',
+		'1.1.1.1',
 		push_task_ahead__user_id,
 		null
 		);
@@ -55,13 +64,13 @@ begin
 				and a.attribute_id = m.attribute_id
             loop
 		/* We only know how to handle boolean attributes ... 
-                but that''s the only thing we have right now, so ... */
+                but that's the only thing we have right now, so ... */
 
-	 	if attr_rec.datatype = ''boolean'' then
+	 	if attr_rec.datatype = 'boolean' then
 		    if my_random() < 0.5 then
-			v_value := ''t'';
+			v_value := 't';
 		    else
-		        v_value := ''f'';
+		        v_value := 'f';
 		    end if;
 
 		    select workflow_case__set_attribute_value (
@@ -74,14 +83,15 @@ begin
 
 	    select workflow_case__end_task_action (
 	        v_journal_id,
-	        ''finish'',
+	        'finish',
 	        push_task_ahead__task_id
 	        );
         end if;
     end if;
 
     return 0;
-end;' language 'plpgsql';
+END;
+$$ LANGUAGE plpgsql;
 
 select inline_1 ();
 
@@ -91,9 +101,15 @@ drop function inline_1 ();
 -- show errors
 
 
-create function inline_2 ()
-returns integer as '
-declare
+
+
+--
+-- procedure inline_2/0
+--
+CREATE OR REPLACE FUNCTION inline_2(
+
+) RETURNS integer AS $$
+DECLARE
   v_object_id           integer;
   v_workflow_key        varchar(100);
   v_count               integer;
@@ -108,7 +124,7 @@ declare
   trans_rec             record;
   party_rec             record;
   case_rec              record;
-begin
+BEGIN
     v_num_cases := 100;
 
     --select dbms_random__initialize (943820482);
@@ -198,7 +214,8 @@ begin
     end loop;
 
     return 0;
-end;' language 'plpgsql';
+END;
+$$ LANGUAGE plpgsql;
 
 select inline_2 ();
 

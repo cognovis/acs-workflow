@@ -7,26 +7,34 @@
 --
 -- @creation-date 2000-05-18
 --
--- @cvs-id $Id$
+-- @cvs-id $Id: wf-core-drop.sql,v 1.1.1.1 2005/04/27 22:50:59 cvs Exp $
 --
 
 /* Drop all cases and all workflows */
-create function inline_0 () returns integer as '
-declare
+
+
+--
+-- procedure inline_0/0
+--
+CREATE OR REPLACE FUNCTION inline_0(
+
+) RETURNS integer AS $$
+DECLARE
         workflow_rec    record;
-begin
+BEGIN
     for workflow_rec in select w.workflow_key, t.table_name 
 	 		   from wf_workflows w, acs_object_types t 
 			  where t.object_type = w.workflow_key
     LOOP
         PERFORM workflow__delete_cases(workflow_rec.workflow_key);
 	
-        execute  ''drop table '' || workflow_rec.table_name;
+        execute  'drop table ' || workflow_rec.table_name;
         PERFORM workflow__drop_workflow(workflow_rec.workflow_key);
     end loop;
 
     return null;
-end;' language 'plpgsql';
+END;
+$$ LANGUAGE plpgsql;
 
 select inline_0 ();
 drop function inline_0 ();

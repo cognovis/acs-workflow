@@ -7,14 +7,15 @@
 --
 -- @creation-date 2000-05-18
 --
--- @cvs-id $Id$
+-- @cvs-id $Id: sample-article-drop.sql,v 1.1.1.1 2005/04/27 22:50:59 cvs Exp $
 --
 
-create function inline_0 () returns integer as '
-begin
-    perform workflow__delete_cases(''article_wf'');
+CREATE OR REPLACE FUNCTION inline_0 () RETURNS integer AS $$
+BEGIN
+    perform workflow__delete_cases('article_wf');
     return 0;
-end;' language 'plpgsql';
+END;
+$$ LANGUAGE plpgsql;
 
 drop table wf_article_cases;
 
@@ -25,11 +26,12 @@ drop function inline_0 ();
 
 
 
-create function inline_0 () returns integer as '
-begin
-    perform workflow__drop_workflow(''article_wf'');
+CREATE OR REPLACE FUNCTION inline_0 () RETURNS integer AS $$
+BEGIN
+    perform workflow__drop_workflow('article_wf');
     return 0;
-end;' language 'plpgsql';
+END;
+$$ LANGUAGE plpgsql;
 
 
 select inline_0 ();

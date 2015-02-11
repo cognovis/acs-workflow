@@ -7,7 +7,7 @@
 --
 -- @creation-date 2000-05-18
 --
--- @cvs-id $Id$
+-- @cvs-id $Id: wf-core-create.sql,v 1.3 2008/12/17 20:26:19 cvs Exp $
 --
 
 ----------------------------------
@@ -17,23 +17,23 @@
 
 /* Create the workflow superclass */
 
-create function inline_0 () 
-returns integer as '
-begin
+CREATE OR REPLACE FUNCTION inline_0 ()  RETURNS integer AS $$
+BEGIN
 	PERFORM acs_object_type__create_type (
-		''workflow'',
-		''Workflow'',
-		''Workflow'',
-		''acs_object'',
-		''wf_cases'',
-		''case_id'',
+		'workflow',
+		'Workflow',
+		'Workflow',
+		'acs_object',
+		'wf_cases',
+		'case_id',
 		null,
-		''f'',
+		'f',
 		null,
 		null
 	);
 	return 0;
-end;' language 'plpgsql';
+END;
+$$ LANGUAGE plpgsql;
 select inline_0 ();
 drop function inline_0 ();
 
@@ -445,7 +445,7 @@ create table wf_context_task_panels (
 					check (only_display_when_started_p in ('t','f')),
 	overrides_both_panels_p		char(1) default 'f'
 					constraint wf_context_panels_ovverides_both_ck
-					overrides_both_panels_p_panels_p in ('t','f')),
+					check(overrides_both_panels_p in ('t','f')),
 	-- table constraints --
 	constraint wf_context_panels_trans_fk
 	foreign key (workflow_key, transition_key) references wf_transitions(workflow_key, transition_key) 
